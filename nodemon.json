@@ -1,0 +1,7 @@
+{
+    "env": {
+        "MONGO_USER": "atlasAdmin",
+        "MONGO_PASSWORD": "9pks1xqibQu0vkSJ",
+        "MONGO_DB": "events-react-dev"
+    }
+}
