@@ -8,7 +8,7 @@ const graphQlResolvers = require('./graphql/resolvers/index');
 
 const app = express();
 
-app.use(bodyParser.json());
+app.use(express.json());
 
 app.use('/graphql', graphqlHTTP({
     schema: graphQlSchema,
@@ -16,7 +16,9 @@ app.use('/graphql', graphqlHTTP({
     graphiql: true
 }));
 
-mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.st71z.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`)
+const mongoConnectionString = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.st71z.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
+
+mongoose.connect(mongoConnectionString, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => app.listen(3000))
     .catch(err => console.error(err));
 
