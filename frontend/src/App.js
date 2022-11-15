@@ -30,13 +30,14 @@ function App() {
 
         <main className="main-content">
           <Routes>
+            <Route path="/events" element={<EventsPage />} />
             {!token && (
               <>
+                <Route path="/bookings" element={<Navigate replace to="/auth" />} />
                 <Route path="/" element={<Navigate replace to="/auth" />} />
                 <Route path="/auth" element={<AuthPage />} />
               </>
             )}
-            <Route path="/events" element={<EventsPage />} />
             {token && (
               <>
                 <Route path="/" element={<Navigate replace to="/events" />} />
