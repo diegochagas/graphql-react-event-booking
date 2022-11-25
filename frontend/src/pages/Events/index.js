@@ -16,10 +16,52 @@ function EventsPage() {
   const priceElRef = useRef(0)
   const dateElRef = useRef('')
   const descriptionElRef = useRef('')
-  const contextType = useContext(AuthContext)
-  const { token } = contextType
+  const context = useContext(AuthContext)
+  const { token } = context
 
   useEffect(() => {
+    function fetchEvents() {
+      setIsLoading(true)
+
+      const requestBody = {
+        query: `
+          query {
+            events {
+              _id
+              title
+              price
+              description
+              date
+              creator {
+                _id
+                email
+              }
+            }
+          }
+        `
+      }
+
+      fetch('http://localhost:8000/graphql', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        if (res.status !== 200 && res.status !== 201) throw new Error('Failed!')
+
+        return res.json()
+      }).then(resData => {
+        setEvents(resData.data.events)
+
+        setIsLoading(false)
+      }).catch(err => {
+        console.log(err)
+
+        setIsLoading(false)
+      })
+    }
+    
     fetchEvents()
   }, [])
 
@@ -68,7 +110,7 @@ function EventsPage() {
         description: resData.data.createEvent.description,
         date: resData.data.createEvent.date,
         creator: {
-          _id: contextType.userId
+          _id: context.userId
         }
       }])
     }).catch(err => {
@@ -82,22 +124,24 @@ function EventsPage() {
     setSelectedEvent(null)
   }
 
-  function fetchEvents() {
-    setIsLoading(true)
+  const showDetailHandler = eventId => {
+    setSelectedEvent(events.find(event => event._id === eventId))
+  }
+
+  const bookEventHandler = () => {
+    if (!token) {
+      setSelectedEvent(null)
+
+      return
+    }
 
     const requestBody = {
       query: `
-        query {
-          events {
+        mutation {
+          bookEvent(eventId: "${selectedEvent._id}") {
             _id
-            title
-            price
-            description
-            date
-            creator {
-              _id
-              email
-            }
+            createdAt
+            updatedAt
           }
         }
       `
@@ -107,31 +151,20 @@ function EventsPage() {
       method: 'POST',
       body: JSON.stringify(requestBody),
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
       }
     }).then(res => {
       if (res.status !== 200 && res.status !== 201) throw new Error('Failed!')
 
       return res.json()
     }).then(resData => {
-      const eventsData = resData.data.events
+      console.log(resData)
 
-      setEvents(eventsData)
-
-      setIsLoading(false)
+      setSelectedEvent(null)
     }).catch(err => {
       console.log(err)
-
-      setIsLoading(false)
     })
-  }
-
-  const showDetailHandler = eventId => {
-    setSelectedEvent(events.find(event => event._id === eventId))
-  }
-
-  const bookEventHandler = () => {
-
   }
 
   return (
@@ -180,7 +213,7 @@ function EventsPage() {
           canConfirm
           onCancel={modalCancelHandler}
           onConfirm={bookEventHandler}
-          confirmText="Book"
+          confirmText={token ? 'Book' : 'Confirm'}
         >
           <h1>{selectedEvent.title}</h1>
 
@@ -198,7 +231,7 @@ function EventsPage() {
       )}
 
       {isLoading ? <Spinner /> : (
-        <EventList events={events} authUserId={contextType.userId} onViewDetail={showDetailHandler} />
+        <EventList events={events} authUserId={context.userId} onViewDetail={showDetailHandler} />
       )}
     </>
   );
