@@ -43,4 +43,11 @@ body {
 
 .btn-cancel {
   background-color: #d61958;
+  border-color: #d61958;
+}
+
+.btn-cancel:hover,
+.btn-cancel:active {
+  background-color: #bc1414;
+  border-color: #bc1414;
 }

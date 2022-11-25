@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
-
-
+import EventList from '../../components/Events/EventList';
 import Modal from '../../components/Modal'
+import Spinner from '../../components/Spinner'
 import AuthContext from '../../context/auth-context';
 
 import './index.css'
@@ -10,6 +10,8 @@ import './index.css'
 function EventsPage() {
   const [creating, startCreateEventHandler] = useState(false)
   const [events, setEvents] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
   const titleElRef = useRef('')
   const priceElRef = useRef(0)
   const dateElRef = useRef('')
@@ -42,10 +44,6 @@ function EventsPage() {
             price
             description
             date
-            creator {
-              _id
-              email
-            }
           }
         }
       `
@@ -63,7 +61,16 @@ function EventsPage() {
 
       return res.json()
     }).then(resData => {
-      fetchEvents()
+      setEvents([...events, {
+        _id: resData.data.createEvent._id,
+        title: resData.data.createEvent.title,
+        price: resData.data.createEvent.price,
+        description: resData.data.createEvent.description,
+        date: resData.data.createEvent.date,
+        creator: {
+          _id: contextType.userId
+        }
+      }])
     }).catch(err => {
       console.log(err)
     })
@@ -71,9 +78,13 @@ function EventsPage() {
 
   const modalCancelHandler = () => {
     startCreateEventHandler(false)
+
+    setSelectedEvent(null)
   }
 
   function fetchEvents() {
+    setIsLoading(true)
+
     const requestBody = {
       query: `
         query {
@@ -106,15 +117,34 @@ function EventsPage() {
       const eventsData = resData.data.events
 
       setEvents(eventsData)
+
+      setIsLoading(false)
     }).catch(err => {
       console.log(err)
+
+      setIsLoading(false)
     })
+  }
+
+  const showDetailHandler = eventId => {
+    setSelectedEvent(events.find(event => event._id === eventId))
+  }
+
+  const bookEventHandler = () => {
+
   }
 
   return (
     <>
       {creating && (
-        <Modal title="Add event" canCancel canConfirm onCancel={modalCancelHandler} onConfirm={modalConfirmHandler}>
+        <Modal
+          title="Add event"
+          canCancel
+          canConfirm
+          onCancel={modalCancelHandler}
+          onConfirm={modalConfirmHandler}
+          confirmText="Confirm"
+        >
           <form>
             <div className="form-control">
               <label htmlFor="title">Title</label>
@@ -143,6 +173,23 @@ function EventsPage() {
         </Modal>
       )}
 
+      {selectedEvent && (
+        <Modal
+          title={selectedEvent.title}
+          canCancel
+          canConfirm
+          onCancel={modalCancelHandler}
+          onConfirm={bookEventHandler}
+          confirmText="Book"
+        >
+          <h1>{selectedEvent.title}</h1>
+
+          <h2>${selectedEvent.price.toFixed(2)} - {new Date(selectedEvent.date).toLocaleDateString('en-GB')}</h2>
+
+          <p>{selectedEvent.description}</p>
+        </Modal>
+      )}
+
       {token && (
         <div className="events-control">
           <p>Share your own Events!</p>
@@ -150,11 +197,9 @@ function EventsPage() {
         </div>
       )}
 
-      <ul className="events__list">
-        {events.map(event => (
-          <li key={event._id} className="events__list-item">{event.title}</li>
-        ))}
-      </ul>
+      {isLoading ? <Spinner /> : (
+        <EventList events={events} authUserId={contextType.userId} onViewDetail={showDetailHandler} />
+      )}
     </>
   );
 }
