@@ -159,8 +159,6 @@ function EventsPage() {
 
       return res.json()
     }).then(resData => {
-      console.log(resData)
-
       setSelectedEvent(null)
     }).catch(err => {
       console.log(err)

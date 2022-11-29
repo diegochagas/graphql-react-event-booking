@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 
+import BookingList from '../../components/Bookings/BookingList';
 import Spinner from '../../components/Spinner';
 import AuthContext from '../../context/auth-context';
-// import { Container } from './styles';
 
 function BookingsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -55,13 +55,43 @@ function BookingsPage() {
     fetchBookings()
   }, [token])
 
-  return isLoading ? <Spinner /> : (
-    <ul>
-      {bookings.map(booking => (
-        <li key={booking._id}>{booking.event.title} - {new Date(booking.createdAt).toLocaleDateString('en-GB')}</li>
-      ))}
-    </ul>
-  )
+  const deleteBookingHandler = bookingId => {
+    setIsLoading(true)
+  
+    const requestBody = {
+      query: `
+        mutation {
+          cancelBooking(bookingId: "${bookingId}") {
+            _id
+            title
+          }
+        }
+      `
+    }
+
+    fetch('http://localhost:8000/graphql', {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    }).then(res => {
+      if (res.status !== 200 && res.status !== 201) throw new Error('Failed!')
+
+      return res.json()
+    }).then(resData => {
+      setBookings(bookings.filter(booking => booking._id !== bookingId))
+
+      setIsLoading(false)
+    }).catch(err => {
+      console.log(err)
+
+      setIsLoading(false)
+    })
+  }
+
+  return isLoading ? <Spinner /> : <BookingList bookings={bookings} onDelete={deleteBookingHandler} />
 }
 
 export default BookingsPage;
