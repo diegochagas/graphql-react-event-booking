@@ -1,0 +1,23 @@
+.tabs {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.tabs .btn-tab {
+  font: inherit;
+  border: none;
+  background: transparent;
+  color: black;
+  padding: 0.25rem 3rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tabs .btn-tab.active {
+  border-bottom-color: #5101d1;
+  color: #5101d1;
+}
+
+.tabs .btn-tab:focus {
+  outline: none;
+}

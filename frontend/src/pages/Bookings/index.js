@@ -1,14 +1,25 @@
 import React, { useContext, useEffect, useState } from 'react';
 
+import Chart from '../../components/Chart';
 import BookingList from '../../components/Bookings/BookingList';
 import Spinner from '../../components/Spinner';
+import Tabs from '../../components/Tabs';
+import Tab from '../../components/Tabs/Tab';
 import AuthContext from '../../context/auth-context';
+import useTabs from '../../hooks/useTabs';
 
 function BookingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [bookings, setBookings] = useState([])
   const context = useContext(AuthContext)
   const { token } = context
+  const labels = ["List", "Chat"]
+  const { currentLabel, toggleLabel } = useTabs(labels[0])
+  const BOOKINGS_BUCKETS = {
+    Cheap: { min: 0, max: 100 },
+    Normal: { min: 100, max: 200 },
+    Expensive: { min: 200, max: 100000000 }
+  }
 
   useEffect(() => {
     const fetchBookings = () => {
@@ -24,6 +35,7 @@ function BookingsPage() {
                 _id
                 title
                 date
+                price
               }
             }
           }
@@ -94,7 +106,44 @@ function BookingsPage() {
     })
   }
 
-  return isLoading ? <Spinner /> : <BookingList bookings={bookings} onDelete={deleteBookingHandler} />
+  function getChartData() {
+    const chartData = { labels: [], datasets: [] }
+    let values = []
+
+    for (const bucket in BOOKINGS_BUCKETS) {
+      const filteredBookingsCount = bookings.reduce((prev, current) => {
+        if (
+          current.event.price > BOOKINGS_BUCKETS[bucket].min &&
+          current.event.price < BOOKINGS_BUCKETS[bucket].max
+        ) {
+          return prev + 1
+        } else return prev
+      }, 0)
+
+      values.push(filteredBookingsCount)
+
+      chartData.labels.push(bucket)
+
+      chartData.datasets.push({ data: values, backgroundColor: 'rgba(220, 220, 220, 0.5)' })
+
+      values = [...values]
+      
+      values[values.length - 1] = 0
+    }
+
+    return chartData
+  }
+
+  return isLoading ? <Spinner /> : (
+    <Tabs labels={labels} selectTab={toggleLabel} currentLabel={currentLabel}>
+      <Tab isActive={currentLabel === labels[0]}>
+        <BookingList bookings={bookings} onDelete={deleteBookingHandler} />
+      </Tab>
+      <Tab isActive={currentLabel === labels[1]}>
+        <Chart chartData={getChartData()} />
+      </Tab>
+    </Tabs>
+  )
 }
 
 export default BookingsPage;

@@ -1,51 +1,49 @@
 const Booking = require('../../models/booking');
 const Event = require('../../models/event');
-
 const { transformBooking, transformEvent } = require('./merge');
 
-
 module.exports = {
-    bookings: async (args, req) => {
-        if (!req.isAuth) {
-            throw new Error('Unathenticated!');
-        }
-        try {
-            const bookings = await Booking.find({ user: req.userId });
+	bookings: async (args, req) => {
+		if (!req.isAuth) throw new Error('Unathenticated!');
 
-            return bookings.map(booking => transformBooking(booking));
-        } catch(err) {
-            throw err;
-        }
-    },
-    bookEvent: async (args, req) => {
-        if (!req.isAuth) {
-            throw new Error('Unathenticated!');
-        }
-        const fetchedEvent = await Event.findOne({  _id: args.eventId });
+		try {
+			const bookings = await Booking.find({ user: req.userId });
 
-        const booking = new Booking({
-            user: req.userId,
-            event: fetchedEvent
-        });
+			return bookings.map(booking => transformBooking(booking));
+		} catch(err) {
+			throw err;
+		}
+	},
+	bookEvent: async (args, req) => {
+		if (!req.isAuth) {
+			throw new Error('Unathenticated!');
+		}
 
-        const result = await booking.save();
+		const fetchedEvent = await Event.findOne({  _id: args.eventId });
 
-        return transformBooking(result);
-    },
-    cancelBooking: async (args, req) => {
-        if (!req.isAuth) {
-            throw new Error('Unathenticated!');
-        }
-        try {
-            const booking = await Booking.findById(args.bookingId).populate('event');
+		const booking = new Booking({
+			user: req.userId,
+			event: fetchedEvent
+		});
 
-            const event = transformEvent(booking.event);
+		const result = await booking.save();
 
-            await Booking.deleteOne({ _id: args.bookingId });
+		return transformBooking(result);
+	},
+	cancelBooking: async (args, req) => {
+		if (!req.isAuth) {
+			throw new Error('Unathenticated!');
+		}
+		try {
+			const booking = await Booking.findById(args.bookingId).populate('event');
 
-            return event;
-        } catch(err) {
-            throw err;
-        }
-    }
+			const event = transformEvent(booking.event);
+
+			await Booking.deleteOne({ _id: args.bookingId });
+
+			return event;
+		} catch(err) {
+			throw err;
+		}
+	}
 };
