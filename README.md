@@ -4,11 +4,11 @@ Build a Project with GraphQL, Node, MongoDB and React.js
 
 ## To run the backend locally
 
-Execute ```npm start``` on the main folder
+First run ```npm install``` on them main folder and after that, execute ```npm start```
 
 ## To run the frontend locally
 
-Execute on the main folder ```cd frontend``` and ```npm start```
+Execute on the main folder ```cd frontend```, after that, ```npm install``` and ```npm start```
 
 ## local url to access the page
 
