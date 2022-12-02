@@ -1,6 +1,8 @@
 import React, { useContext, useRef, useState } from 'react';
 
 import AuthContext from '../../context/auth-context';
+import { CREATE_USER } from '../../graphql/mutations';
+import { LOGIN } from '../../graphql/queries';
 import './index.css'
 
 function AuthPage() {
@@ -19,42 +21,12 @@ function AuthPage() {
       return
     }
 
-    let requestBody = {
-      query: `
-        query Login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            userId
-            token
-            tokenExpiration
-          }
-        }
-      `,
-      variables: {
-        email,
-        password
-      }
-    }
-
-    if (!isLogin) {
-      requestBody = {
-        query: `
-          mutation CreateUser($email: String!, $password: String!) {
-            createUser(userInput: { email: $email, password: $password }) {
-              _id
-              email
-            }
-          }
-        `,
-        variables: {
-          email,
-          password
-        }
-      }
-    }
-
     fetch('http://localhost:8000/graphql', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(!isLogin ?
+        CREATE_USER(email, password) :
+        LOGIN(email, password)
+      ),
       headers: {
         'Content-Type': 'application/json',
       }

@@ -4,6 +4,8 @@ import EventList from '../../components/Events/EventList';
 import Modal from '../../components/Modal'
 import Spinner from '../../components/Spinner'
 import AuthContext from '../../context/auth-context';
+import { BOOK_EVENT, CREATE_EVENT } from '../../graphql/mutations';
+import { EVENTS } from '../../graphql/queries';
 
 import './index.css'
 
@@ -23,27 +25,9 @@ function EventsPage() {
     function fetchEvents() {
       setIsLoading(true)
 
-      const requestBody = {
-        query: `
-          query {
-            events {
-              _id
-              title
-              price
-              description
-              date
-              creator {
-                _id
-                email
-              }
-            }
-          }
-        `
-      }
-
       fetch('http://localhost:8000/graphql', {
         method: 'POST',
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(EVENTS),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -77,29 +61,9 @@ function EventsPage() {
       return
     }
 
-    const requestBody = {
-      query: `
-        mutation CreateEvent($title: String!, $description: String!, $price: Float!, $date: String!){
-          createEvent(eventInput: { title: $title, description: $description, price: $price, date: $date }) {
-            _id
-            title
-            price
-            description
-            date
-          }
-        }
-      `,
-      variables: {
-        title,
-        description,
-        price,
-        date
-      }
-    }
-
     fetch('http://localhost:8000/graphql', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(CREATE_EVENT(title, description, price, date)),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -141,24 +105,9 @@ function EventsPage() {
       return
     }
 
-    const requestBody = {
-      query: `
-        mutation BookEvent($id: ID!) {
-          bookEvent(eventId: $id) {
-            _id
-            createdAt
-            updatedAt
-          }
-        }
-      `, 
-      variables: {
-        id: selectedEvent._id
-      }
-    }
-
     fetch('http://localhost:8000/graphql', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(BOOK_EVENT(selectedEvent._id)),
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`

@@ -7,6 +7,8 @@ import Tabs from '../../components/Tabs';
 import Tab from '../../components/Tabs/Tab';
 import AuthContext from '../../context/auth-context';
 import useTabs from '../../hooks/useTabs';
+import { BOOKINGS } from '../../graphql/queries';
+import { CANCEL_BOOKING } from '../../graphql/mutations';
 
 function BookingsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -25,26 +27,9 @@ function BookingsPage() {
     const fetchBookings = () => {
       setIsLoading(true)
   
-      const requestBody = {
-        query: `
-          query {
-            bookings {
-              _id
-              createdAt
-              event {
-                _id
-                title
-                date
-                price
-              }
-            }
-          }
-        `
-      }
-  
       fetch('http://localhost:8000/graphql', {
         method: 'POST',
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(BOOKINGS),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -69,24 +54,10 @@ function BookingsPage() {
 
   const deleteBookingHandler = bookingId => {
     setIsLoading(true)
-  
-    const requestBody = {
-      query: `
-        mutation CancelBooking($id: ID!) {
-          cancelBooking(bookingId: $id) {
-            _id
-            title
-          }
-        }
-      `,
-      variables: {
-        id: bookingId
-      }
-    }
 
     fetch('http://localhost:8000/graphql', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(CANCEL_BOOKING(bookingId)),
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
