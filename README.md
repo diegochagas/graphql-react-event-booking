@@ -21,3 +21,7 @@ http://localhost:8000/graphql
 ## Database location
 
 https://www.mongodb.com/atlas/database
+
+---
+
+# God be praised!
